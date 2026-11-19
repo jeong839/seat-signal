@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { fmtRemain, statusLabel, useSeats, type Chair } from "../lib/seats";
 
 export const lampColor = { green: "#35d07f", red: "#f2564d", yellow: "#ffb81c" } as const;
@@ -75,19 +76,40 @@ export function SeatCountControl() {
 
 export function AwayTimeControl() {
   const { minutes, setMinutes, demo } = useSeats();
+  const [text, setText] = useState(String(minutes));
+  useEffect(() => setText(String(minutes)), [minutes]);
+  const commit = () => {
+    const n = Math.round(Number(text));
+    if (Number.isFinite(n) && n >= 1) setMinutes(n);
+    else setText(String(minutes));
+  };
   const btn = "grid size-11 place-items-center rounded-xl bg-[#2a3034] text-2xl font-black hover:bg-[#343b40] active:scale-95";
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-[#1d2124] p-4 ring-1 ring-[#2c3236]">
       <div>
         <div className="font-bold">자리 비움 제한 시간</div>
         <div className="text-xs text-[#9aa09b]">
-          손님이 일어난 순간부터 이 시간이 지나면 빈자리가 돼요.
+          손님이 일어난 순간부터 이 시간이 지나면 빈자리가 돼요. 숫자를 직접 입력해도 돼요(1~180분).
           {demo && " 지금은 시연 모드라 10초로 돌아가요. 시연 모드를 끄면 아래 시간이 적용돼요."}
         </div>
       </div>
       <div className="ml-auto flex items-center gap-3">
         <button type="button" onClick={() => setMinutes(minutes - 1)} aria-label="1분 줄이기" className={btn}>−</button>
-        <span className="min-w-20 text-center text-3xl font-black tabular-nums">{minutes}<span className="ml-1 text-base font-bold">분</span></span>
+        <label className="flex items-center gap-1">
+          <span className="sr-only">제한 시간(분)</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={180}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+            className="h-11 w-24 rounded-xl bg-[#0e1012] px-2 text-center text-3xl font-black tabular-nums ring-1 ring-[#4a5258] focus:outline-none focus:ring-2 focus:ring-[#ffb81c]"
+          />
+          <span className="text-base font-bold">분</span>
+        </label>
         <button type="button" onClick={() => setMinutes(minutes + 1)} aria-label="1분 늘리기" className={btn}>+</button>
       </div>
       <div className="flex w-full gap-2">

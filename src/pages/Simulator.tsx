@@ -1,4 +1,4 @@
-import { SeatMap } from "../components/Chair";
+import { AwayTimeControl, SeatCountControl, SeatMap } from "../components/Chair";
 import { fmtTime, useSeats } from "../lib/seats";
 
 export default function Simulator() {
@@ -12,6 +12,8 @@ export default function Simulator() {
         <p className="mt-1 text-sm text-[#9aa09b]">의자를 누르면 센서 감지를 흉내 내요. 빈 의자는 착석, 사용 중은 이석, 자리 비움은 복귀예요.</p>
         <p className="mt-3 text-sm font-semibold tabular-nums">빈자리 {free} · 사용 중 {used} · 자리 비움 {away}</p>
       </div>
+      <AwayTimeControl />
+      <SeatCountControl />
       <SeatMap onTap={tap} />
       <section aria-label="직원 알림 로그" className="rounded-2xl bg-[#1d2124] p-4 ring-1 ring-[#2c3236]">
         <div className="mb-2 flex items-center justify-between">

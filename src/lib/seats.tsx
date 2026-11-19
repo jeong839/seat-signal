@@ -15,14 +15,18 @@ type Ctx = {
   logs: StaffLog[];
   events: ChairEvent[];
   demo: boolean;
+  minutes: number;
   limitMs: number;
   now: number;
   free: number;
   remainingMs: (c: Chair) => number | null;
   tap: (id: number) => Promise<void>;
   setDemo: (on: boolean) => Promise<void>;
+  setMinutes: (m: number) => Promise<void>;
   handleLog: (id: number) => Promise<void>;
   resetDemo: () => Promise<void>;
+  addChair: () => Promise<void>;
+  removeChair: () => Promise<void>;
 };
 
 const SeatsContext = createContext<Ctx | null>(null);
@@ -37,6 +41,7 @@ export function SeatsProvider({ children }: { children: ReactNode }) {
   const [logs, setLogs] = useState<StaffLog[]>([]);
   const [events, setEvents] = useState<ChairEvent[]>([]);
   const [demo, setDemoState] = useState(true);
+  const [minutes, setMinutesState] = useState(20);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -47,7 +52,7 @@ export function SeatsProvider({ children }: { children: ReactNode }) {
     const t0 = Date.now();
     const [c, s, l, e, t] = await Promise.all([
       supabase.from("chairs").select("*").order("id"),
-      supabase.from("app_settings").select("demo_mode").eq("id", 1).maybeSingle(),
+      supabase.from("app_settings").select("demo_mode, away_minutes").eq("id", 1).maybeSingle(),
       supabase.from("staff_logs").select("*").order("id", { ascending: false }).limit(50),
       supabase.from("chair_events").select("*").order("id", { ascending: false }).limit(60),
       supabase.rpc("server_now"),
@@ -60,6 +65,7 @@ export function SeatsProvider({ children }: { children: ReactNode }) {
     if (typeof t.data === "string") offset.current = new Date(t.data).getTime() - (t0 + Date.now()) / 2;
     setChairs(c.data as Chair[]);
     setDemoState(s.data?.demo_mode ?? true);
+    setMinutesState(s.data?.away_minutes ?? 20);
     setLogs(l.data as StaffLog[]);
     setEvents(e.data as ChairEvent[]);
     setError(null);
@@ -90,7 +96,7 @@ export function SeatsProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(id);
   }, []);
 
-  const limitMs = demo ? 10_000 : 20 * 60_000;
+  const limitMs = demo ? 10_000 : minutes * 60_000;
   const serverNow = now + offset.current;
 
   const remainingMs = useCallback(
@@ -125,6 +131,7 @@ export function SeatsProvider({ children }: { children: ReactNode }) {
       logs,
       events,
       demo,
+      minutes,
       limitMs,
       now,
       free: chairs.filter((c) => c.status === "green").length,
@@ -134,10 +141,21 @@ export function SeatsProvider({ children }: { children: ReactNode }) {
         setDemoState(on);
         await act(() => supabase.rpc("set_demo_mode", { p_on: on }));
       },
+      setMinutes: async (m) => {
+        const v = Math.max(1, Math.min(180, m));
+        setMinutesState(v);
+        await act(() => supabase.rpc("set_away_minutes", { p_min: v }));
+      },
       handleLog: (id) => act(() => supabase.rpc("handle_log", { p_id: id })),
       resetDemo: () => act(() => supabase.rpc("reset_demo")),
+      addChair: () => act(() => supabase.rpc("add_chair")),
+      removeChair: async () => {
+        const { error: err } = await supabase.rpc("remove_chair");
+        setError(err ? "마지막 번호 의자가 사용 중이거나 마지막 한 개라서 지울 수 없어요. 빈 의자(초록불)일 때만 지울 수 있어요." : null);
+        await load();
+      },
     }),
-    [ready, error, chairs, logs, events, demo, limitMs, now, remainingMs, act],
+    [ready, error, chairs, logs, events, demo, minutes, limitMs, now, remainingMs, act],
   );
 
   return <SeatsContext.Provider value={value}>{children}</SeatsContext.Provider>;

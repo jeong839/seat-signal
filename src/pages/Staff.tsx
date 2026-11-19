@@ -1,4 +1,4 @@
-import { Lamp } from "../components/Chair";
+import { Lamp, AwayTimeControl, SeatCountControl } from "../components/Chair";
 import { fmtRemain, fmtTime, statusLabel, useSeats } from "../lib/seats";
 
 export default function Staff() {
@@ -8,6 +8,8 @@ export default function Staff() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-black tracking-tight">직원 화면</h1>
+      <AwayTimeControl />
+      <SeatCountControl />
 
       <section className="rounded-2xl bg-[#1d2124] p-4 ring-1 ring-[#2c3236]">
         <h2 className="mb-2 font-bold">소지품 보관이 필요한 의자 <span className="text-[#ffb81c]">{pending.length}</span></h2>

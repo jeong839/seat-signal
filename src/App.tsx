@@ -10,7 +10,7 @@ const tabs = [
 ];
 
 function Shell() {
-  const { ready, error, demo, setDemo } = useSeats();
+  const { ready, error, demo, minutes, setDemo } = useSeats();
   return (
     <div className="min-h-screen bg-[#0e1012] text-[#f1efe8] [word-break:keep-all]">
       <header className="sticky top-0 z-10 border-b border-[#2c3236] bg-[#14171a]/95 backdrop-blur">
@@ -28,7 +28,7 @@ function Shell() {
           </nav>
           <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm font-semibold">
             <input type="checkbox" className="size-5 accent-[#ffb81c]" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
-            시연 모드 <span className="text-[#9aa09b]">({demo ? "10초" : "20분"})</span>
+            시연 모드 <span className="text-[#9aa09b]">({demo ? "10초" : `${minutes}분`})</span>
           </label>
         </div>
       </header>

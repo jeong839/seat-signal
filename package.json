@@ -9,6 +9,7 @@
     "check": "node ../_tools/check.mjs ."
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.1",
     "hono": "^4.10.2",
     "lucide-react": "^0.545.0",
     "react": "^19.1.0",
